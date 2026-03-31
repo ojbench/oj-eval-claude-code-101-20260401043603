@@ -1,42 +1,44 @@
 #include <iostream>
-#include <algorithm>
-#include <climits>
 using namespace std;
 
 int main() {
     long long a, b, c, d, e, f;
     cin >> a >> b >> c >> d >> e >> f;
 
-    long long min_seconds = LLONG_MAX;
-    long long max_val = min({a, b, c});
+    // a = seconds per minute
+    // b = minutes per hour
+    // c = hours per day
+    // Current time: f hours, e minutes, d seconds
 
-    // For each possible target value that all three could display
-    for (long long target = 0; target < max_val; target++) {
-        // Calculate minimum seconds needed for seconds pointer to show 'target'
-        long long s_for_sec;
-        if (target >= d) {
-            s_for_sec = target - d;
-        } else {
-            s_for_sec = a - d + target;
+    long long seconds = 0;
+    long long curr_d = d, curr_e = e, curr_f = f;
+
+    // We need to find when curr_f == curr_e == curr_d
+    while (true) {
+        if (curr_f == curr_e && curr_e == curr_d) {
+            break;
         }
 
-        // Now enumerate values s = s_for_sec + k*a until we find one where
-        // minutes and hours also show 'target'
-        // We only need to check up to b*c iterations (worst case)
-        for (long long k = 0; k < b * c; k++) {
-            long long s = s_for_sec + k * a;
-            long long total = d + s;
+        // Add one second
+        seconds++;
+        curr_d++;
 
-            long long min_val = (e + total / a) % b;
-            long long hour_val = (f + total / (a * b)) % c;
+        // Handle overflow
+        if (curr_d >= a) {
+            curr_d = 0;
+            curr_e++;
 
-            if (min_val == target && hour_val == target) {
-                min_seconds = min(min_seconds, s);
-                break; // Found earliest for this target
+            if (curr_e >= b) {
+                curr_e = 0;
+                curr_f++;
+
+                if (curr_f >= c) {
+                    curr_f = 0;
+                }
             }
         }
     }
 
-    cout << min_seconds << endl;
+    cout << seconds << endl;
     return 0;
 }
