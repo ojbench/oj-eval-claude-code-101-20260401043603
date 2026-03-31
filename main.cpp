@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <climits>
 using namespace std;
 
 int main() {
@@ -10,35 +12,43 @@ int main() {
     // c = hours per day
     // Current time: f hours, e minutes, d seconds
 
-    long long seconds = 0;
-    long long curr_d = d, curr_e = e, curr_f = f;
+    long long min_seconds = LLONG_MAX;
+    long long max_val = min({a, b, c});
 
-    // We need to find when curr_f == curr_e == curr_d
-    while (true) {
-        if (curr_f == curr_e && curr_e == curr_d) {
-            break;
+    // Try all possible target values where all three pointers could align
+    for (long long target = 0; target < max_val; target++) {
+        // We need to find s such that:
+        // (d + s) % a == target
+        // (e + (d + s) / a) % b == target
+        // (f + (d + s) / (a*b)) % c == target
+
+        // Start with seconds constraint: (d + s) % a == target
+        // So s = target - d (mod a)
+        long long s_base;
+        if (target >= d) {
+            s_base = target - d;
+        } else {
+            s_base = a + target - d;
         }
 
-        // Add one second
-        seconds++;
-        curr_d++;
+        // Now iterate through values s = s_base + k*a for various k
+        // and check if both minute and hour conditions are satisfied
+        // Maximum we need to check is a*b*c seconds (one full cycle)
+        long long max_check = a * b * c;
 
-        // Handle overflow
-        if (curr_d >= a) {
-            curr_d = 0;
-            curr_e++;
+        for (long long s = s_base; s < max_check; s += a) {
+            long long total_sec = d + s;
+            long long sec_display = total_sec % a;
+            long long min_display = (e + total_sec / a) % b;
+            long long hour_display = (f + total_sec / (a * b)) % c;
 
-            if (curr_e >= b) {
-                curr_e = 0;
-                curr_f++;
-
-                if (curr_f >= c) {
-                    curr_f = 0;
-                }
+            if (sec_display == target && min_display == target && hour_display == target) {
+                min_seconds = min(min_seconds, s);
+                break;  // Found for this target, no need to check further
             }
         }
     }
 
-    cout << seconds << endl;
+    cout << min_seconds << endl;
     return 0;
 }
